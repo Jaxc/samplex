@@ -8,7 +8,8 @@
 #  SPDX-License-Identifier: MIT
 #
 #  Contributors:
-#     Ali Eissa - 2026 version.
+#     Ali Eissa     - 2026 version.
+#     Jacob Rosén   - STM32F429ZI adaptation
 
 set -e
 
@@ -42,11 +43,14 @@ echo ""
 rm -rf "${HAL_DEST}"
 rm -rf "${CMSIS_DEVICE_DEST}"
 rm -rf "${CMSIS_INCLUDE_DEST}"
+rm -rf "${ST_USBX_DEST}"
 
 # Re-create directories
 mkdir -p "${HAL_DEST}"
 mkdir -p "${CMSIS_DEVICE_DEST}"
 mkdir -p "${CMSIS_INCLUDE_DEST}"
+mkdir -p "${ST_USBX_DEST}/usbx_stm32_device_controllers/"
+mkdir -p "${ST_USBX_DEST}/usbx_stm32_host_controllers/"
 
 TEMP_DIR="${BOARD_DIR}/temp_clone"
 
@@ -87,7 +91,26 @@ clean_temp
 echo "[OK] Up-to-date CMSIS Core Include headers copied"
 echo ""
 
-# 4. Fetch the STM32F429 SVD from the CMSIS device pack
+# 4. Fetch STs fork of usbx for driver middle layer
+echo "[INFO] Cloning STs fork of usbx for driver middle layer (depth=1)..."
+git clone --depth 1 https://github.com/STMicroelectronics/stm32-mw-usbx.git "${TEMP_DIR}"
+cp -r "${TEMP_DIR}/common/usbx_stm32_device_controllers" "${ST_USBX_DEST}/"
+cp -r "${TEMP_DIR}/common/usbx_stm32_host_controllers" "${ST_USBX_DEST}/"
+cp -r "${TEMP_DIR}/common/usbx_stm32_host_controllers" "${ST_USBX_DEST}/"
+clean_temp
+echo "[OK] ST USBX Middleware copied"
+echo ""
+
+# 5. Fetch STs fork of filex for driver middle layer
+echo "[INFO] Cloning STs fork of filex for driver middle layer (depth=1)..."
+git clone --depth 1 https://github.com/STMicroelectronics/stm32-mw-filex.git "${TEMP_DIR}"
+cp -r "${TEMP_DIR}/common/drivers" "${ST_USBX_DEST}/filex_stm32_drivers"
+clean_temp
+echo "[OK] ST FileX Middleware copied"
+echo ""
+
+
+# 6. Fetch the STM32F429 SVD from the CMSIS device pack
 echo "[INFO] Fetching STM32F429 SVD from CMSIS pack ${SVD_PACK_VERSION}..."
 mkdir -p "${TOOLS_DIR}"
 mkdir -p "${TEMP_DIR}"

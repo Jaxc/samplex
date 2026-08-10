@@ -151,6 +151,7 @@ void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   __disable_irq();
+  __BKPT();
   while (1)
   {
   }

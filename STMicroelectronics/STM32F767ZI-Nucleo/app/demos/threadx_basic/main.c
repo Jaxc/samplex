@@ -9,34 +9,34 @@
  *
  *  Contributors:
  *     Ali Eissa - 2026 version.
+ *     Jacob Rosén - STM32F429ZI adaptation
  */
 
 #include "board_init.h"
 #include "tx_api.h"
 #include <stdio.h>
-#include "ansi_colors.h"
 
 /* --- ThreadX Resource Definitions --- */
 
 /* 1. Green LED Blinky Thread */
 #define GREEN_THREAD_STACK_SIZE 1024
 TX_THREAD green_thread;
-uint8_t green_thread_stack[GREEN_THREAD_STACK_SIZE];
+CHAR green_thread_stack[GREEN_THREAD_STACK_SIZE];
 
 /* 2. Button Controller Thread */
 #define BUTTON_THREAD_STACK_SIZE 1024
 TX_THREAD button_thread;
-uint8_t button_thread_stack[BUTTON_THREAD_STACK_SIZE];
+CHAR button_thread_stack[BUTTON_THREAD_STACK_SIZE];
 
 /* 3. Logger Thread */
 #define LOGGER_THREAD_STACK_SIZE 1024
 TX_THREAD logger_thread;
-uint8_t logger_thread_stack[LOGGER_THREAD_STACK_SIZE];
+CHAR logger_thread_stack[LOGGER_THREAD_STACK_SIZE];
 
 /* 4. Keyboard Input Thread */
 #define INPUT_THREAD_STACK_SIZE 1024
 TX_THREAD input_thread;
-uint8_t input_thread_stack[INPUT_THREAD_STACK_SIZE];
+CHAR input_thread_stack[INPUT_THREAD_STACK_SIZE];
 
 /* 5. ThreadX Message Queue */
 #define QUEUE_MAX_MESSAGES 16
@@ -49,6 +49,9 @@ void green_thread_entry(ULONG thread_input);
 void button_thread_entry(ULONG thread_input);
 void logger_thread_entry(ULONG thread_input);
 void input_thread_entry(ULONG thread_input);
+
+/* External console function declaration */
+int __io_getchar(void);
 
 /**
   * @brief  Standard C Main entry point.
@@ -69,17 +72,22 @@ int main(void)
   */
 void tx_application_define(void *first_unused_memory)
 {
+    UINT status;
     (void)first_unused_memory;
 
     /* ThreadX Message Queue */
-    tx_queue_create(&msg_queue,
+    status = tx_queue_create(&msg_queue,
                     "Message Queue",
                     MESSAGE_SIZE_WORDS,
                     queue_buffer,
                     sizeof(queue_buffer));
+    /* Check for error.  */
+    if (status != TX_SUCCESS) {
+        Error_Handler();
+    }
 
     /* Thread 1: Blinks Green LED */
-    tx_thread_create(&green_thread,
+    status = tx_thread_create(&green_thread,
                      "Green LED Thread",
                      green_thread_entry,
                      0,
@@ -89,9 +97,13 @@ void tx_application_define(void *first_unused_memory)
                      15,
                      TX_NO_TIME_SLICE,
                      TX_AUTO_START);
+    /* Check for error.  */
+    if (status != TX_SUCCESS) {
+        Error_Handler();
+    }
 
     /* Thread 2: Scans User Button */
-    tx_thread_create(&button_thread,
+    status = tx_thread_create(&button_thread,
                      "Button Thread",
                      button_thread_entry,
                      0,
@@ -101,9 +113,13 @@ void tx_application_define(void *first_unused_memory)
                      10,
                      TX_NO_TIME_SLICE,
                      TX_AUTO_START);
+    /* Check for error.  */
+    if (status != TX_SUCCESS) {
+        Error_Handler();
+    }
 
     /* Thread 3: Prints Logs to PC */
-    tx_thread_create(&logger_thread,
+    status = tx_thread_create(&logger_thread,
                      "Logger Thread",
                      logger_thread_entry,
                      0,
@@ -113,9 +129,13 @@ void tx_application_define(void *first_unused_memory)
                      10,
                      TX_NO_TIME_SLICE,
                      TX_AUTO_START);
+    /* Check for error.  */
+    if (status != TX_SUCCESS) {
+        Error_Handler();
+    }
 
     /* Thread 4: Monitors Keyboard Input */
-    tx_thread_create(&input_thread,
+    status = tx_thread_create(&input_thread,
                      "Input Thread",
                      input_thread_entry,
                      0,
@@ -125,6 +145,10 @@ void tx_application_define(void *first_unused_memory)
                      5,
                      TX_NO_TIME_SLICE,
                      TX_AUTO_START);
+
+    /* Check for error.  */
+    if (status != TX_SUCCESS) {
+        Error_Handler();
 }
 
 /**
@@ -136,9 +160,9 @@ void green_thread_entry(ULONG thread_input)
 {
     (void)thread_input;
 
-    printf(ANSI_BOLD ANSI_CYAN "\r\n==========================================\r\n" ANSI_RESET);
-    printf(ANSI_BOLD ANSI_CYAN "ThreadX Multitasking Edge Node Demo Booted!\r\n" ANSI_RESET);
-    printf(ANSI_BOLD ANSI_CYAN "==========================================\r\n\r\n" ANSI_RESET);
+    printf("\r\n==========================================\r\n");
+    printf("ThreadX Multitasking Edge Node Demo Booted!\r\n");
+    printf("==========================================\r\n\r\n");
 
     while (1)
     {
@@ -327,8 +351,5 @@ void input_thread_entry(ULONG thread_input)
         tx_thread_sleep(1);
     }
 }
-
-
-
 
 

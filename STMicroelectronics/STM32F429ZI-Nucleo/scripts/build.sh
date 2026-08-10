@@ -35,7 +35,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOARD_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BUILD_DIR="${BOARD_DIR}/build"
-NUM_JOBS=4
+NUM_JOBS="$(nproc)"
 
 echo "=========================================="
 echo "STM32F429ZI-Nucleo - Build Script (Linux)"
@@ -80,7 +80,7 @@ echo "[INFO] Building with ${NUM_JOBS} parallel jobs..."
 if command -v ninja &> /dev/null; then
     ninja -j ${NUM_JOBS}
 else
-    cmake --build . --parallel ${NUM_JOBS} --config Release
+    cmake --build . --parallel ${NUM_JOBS} --config Debug
 fi
 
 echo ""
