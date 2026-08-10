@@ -1,13 +1,13 @@
 #  Copyright (c) Microsoft
 #  Copyright (c) 2024 Eclipse Foundation
-# 
-#  This program and the accompanying materials are made available 
+#
+#  This program and the accompanying materials are made available
 #  under the terms of the MIT license which is available at
 #  https://opensource.org/license/mit.
-# 
+#
 #  SPDX-License-Identifier: MIT
-# 
-#  Contributors: 
+#
+#  Contributors:
 #     Microsoft         - Initial version
 #     Frédéric Desbiens - 2024 version.
 
@@ -29,11 +29,11 @@ endif(WIN32)
 
 find_program(COMPILER_ON_PATH "${TARGET_TRIPLET}gcc${TOOLCHAIN_EXT}")
 
-if(DEFINED ENV{ARM_GCC_PATH}) 
-    # use the environment variable first    
+if(DEFINED ENV{ARM_GCC_PATH})
+    # use the environment variable first
     file(TO_CMAKE_PATH $ENV{ARM_GCC_PATH} ARM_TOOLCHAIN_PATH)
     message(STATUS "Using ENV variable ARM_GCC_PATH = ${ARM_TOOLCHAIN_PATH}")
-elseif(COMPILER_ON_PATH) 
+elseif(COMPILER_ON_PATH)
     # then check on the current path
     get_filename_component(ARM_TOOLCHAIN_PATH ${COMPILER_ON_PATH} DIRECTORY)
     message(STATUS "Using ARM GCC from path = ${ARM_TOOLCHAIN_PATH}")
@@ -67,12 +67,12 @@ set(CMAKE_CXX_FLAGS "${MCPU_FLAGS} ${VFP_FLAGS} ${CMAKE_COMMON_FLAGS}")
 set(CMAKE_ASM_FLAGS "${MCPU_FLAGS} ${VFP_FLAGS} ${CMAKE_COMMON_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${LD_FLAGS} --specs=nano.specs -Wl,--gc-sections,-print-memory-usage")
 
-set(CMAKE_C_FLAGS_DEBUG "-O0")
-set(CMAKE_CXX_ASM_FLAGS_DEBUG "-O0")
+set(CMAKE_C_FLAGS_DEBUG "-Og")
+set(CMAKE_CXX_ASM_FLAGS_DEBUG "-Og")
 set(CMAKE_ASM_FLAGS_DEBUG "")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "")
 
-set(CMAKE_C_FLAGS_RELEASE "-Os -flto")
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -flto")
+set(CMAKE_C_FLAGS_RELEASE "-Og -flto")
+set(CMAKE_CXX_FLAGS_RELEASE "-Og -flto")
 set(CMAKE_ASM_FLAGS_RELEASE "")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-flto")

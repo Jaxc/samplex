@@ -12,12 +12,10 @@
 #     Frédéric Desbiens - 2024 version.
 #     Ali Eissa         - 2026 version.
 
-# Define the CPU architecture for ThreadX
-set(THREADX_ARCH "cortex_m4")
-set(THREADX_TOOLCHAIN "gnu")
+message(STATUS "STM32F4xx library check: " ${STM32Cube_DIR})
 
-# Cortex-M4 compiler options
-set(MCPU_FLAGS "-mthumb -mcpu=cortex-m4")
-set(VFP_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
+AUX_SOURCE_DIRECTORY(${STM32Cube_DIR}/Drivers/Middleware/filex_stm32_drivers/ ST_FILEX_MIDDLEWARE_SOURCES)
 
-include(${CMAKE_CURRENT_LIST_DIR}/arm-gcc-cortex-toolchain.cmake)
+include(FindPackageHandleStandardArgs)
+
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(ST_FILEX_MIDDLEWARE DEFAULT_MSG ST_FILEX_MIDDLEWARE_SOURCES)

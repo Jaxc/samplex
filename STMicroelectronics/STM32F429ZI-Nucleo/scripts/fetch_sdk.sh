@@ -21,6 +21,7 @@ DRIVERS_DIR="${LIB_DIR}/Drivers"
 HAL_DEST="${DRIVERS_DIR}/STM32F4xx_hal_Driver"
 CMSIS_DEVICE_DEST="${DRIVERS_DIR}/CMSIS/Device/ST/STM32F4xx"
 CMSIS_INCLUDE_DEST="${DRIVERS_DIR}/CMSIS/Include"
+ST_USBX_DEST="${DRIVERS_DIR}/Middleware"
 
 echo "=========================================="
 echo "STM32CubeF4 Standalone Driver Fetcher (Linux)"
@@ -32,11 +33,14 @@ echo ""
 rm -rf "${HAL_DEST}"
 rm -rf "${CMSIS_DEVICE_DEST}"
 rm -rf "${CMSIS_INCLUDE_DEST}"
+rm -rf "${ST_USBX_DEST}"
 
 # Re-create directories
 mkdir -p "${HAL_DEST}"
 mkdir -p "${CMSIS_DEVICE_DEST}"
 mkdir -p "${CMSIS_INCLUDE_DEST}"
+mkdir -p "${ST_USBX_DEST}/usbx_stm32_device_controllers/"
+mkdir -p "${ST_USBX_DEST}/usbx_stm32_host_controllers/"
 
 TEMP_DIR="${BOARD_DIR}/temp_clone"
 
@@ -76,6 +80,25 @@ cp -r "${TEMP_DIR}/CMSIS/Core/Include/"* "${CMSIS_INCLUDE_DEST}/"
 clean_temp
 echo "[OK] Up-to-date CMSIS Core Include headers copied"
 echo ""
+
+# 4. Fetch STs fork of usbx for driver middle layer
+echo "[INFO] Cloning STs fork of usbx for driver middle layer (depth=1)..."
+git clone --depth 1 https://github.com/STMicroelectronics/stm32-mw-usbx.git "${TEMP_DIR}"
+cp -r "${TEMP_DIR}/common/usbx_stm32_device_controllers" "${ST_USBX_DEST}/"
+cp -r "${TEMP_DIR}/common/usbx_stm32_host_controllers" "${ST_USBX_DEST}/"
+cp -r "${TEMP_DIR}/common/usbx_stm32_host_controllers" "${ST_USBX_DEST}/"
+clean_temp
+echo "[OK] ST USBX Middleware copied"
+echo ""
+
+# 5. Fetch STs fork of filex for driver middle layer
+echo "[INFO] Cloning STs fork of filex for driver middle layer (depth=1)..."
+git clone --depth 1 https://github.com/STMicroelectronics/stm32-mw-filex.git "${TEMP_DIR}"
+cp -r "${TEMP_DIR}/common/drivers" "${ST_USBX_DEST}/filex_stm32_drivers"
+clean_temp
+echo "[OK] ST FileX Middleware copied"
+echo ""
+
 
 echo "=========================================="
 echo "[SUCCESS] STM32CubeF4 drivers successfully fetched!"

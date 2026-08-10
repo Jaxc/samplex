@@ -44,10 +44,10 @@ void board_init(void)
     MX_USART3_UART_Init();
 
     /* Initalize Ethernet */
-    //ethernet_phy_init();
+    ethernet_phy_init();
 
     /* Initialize USB */
-    //MX_USB_OTG_FS_PCD_Init();
+    usb_phy_init();
 }
 
 /**
@@ -158,6 +158,7 @@ void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   __disable_irq();
+  __BKPT();
   while (1)
   {
   }

@@ -17,6 +17,8 @@ set(HAL_COMPONENTS adc can cec cortex crc cryp dac dcmi dma dma2d eth exti flash
                     nand nor pccard pcd pwr qspi rcc rng rtc sai sd sdram
                     smartcard spdifrx spi sram tim timebase_tim uart usart wwdg)
 
+set(LL_COMPONENTS ll_usb)
+
 set(HAL_REQUIRED_COMPONENTS cortex pwr rcc)
 
 # Components that have _ex sources
@@ -49,25 +51,33 @@ foreach(cmp ${HAL_REQUIRED_COMPONENTS})
 endforeach()
 
 foreach(cmp ${STM32HAL_FIND_COMPONENTS})
-    list(FIND HAL_COMPONENTS ${cmp} STM32HAL_FOUND_INDEX)
+    list(FIND LL_COMPONENTS ${cmp} STM32HAL_FOUND_INDEX)
     if(${STM32HAL_FOUND_INDEX} LESS 0)
-        message(FATAL_ERROR "Unknown STM32HAL component: ${cmp}. Available components: ${HAL_COMPONENTS}")
-	else()
-        list(APPEND HAL_HEADERS ${HAL_PREFIX}hal_${cmp}.h)
-        list(APPEND HAL_SRCS ${HAL_PREFIX}hal_${cmp}.c)
+        list(FIND HAL_COMPONENTS ${cmp} STM32HAL_FOUND_INDEX)
+        if(${STM32HAL_FOUND_INDEX} LESS 0)
+            message(FATAL_ERROR "Unknown STM32HAL component: ${cmp}. Available HAL components: ${HAL_COMPONENTS} available LL components ${LL_COMPONENTS}")
+
+        else()
+            list(APPEND HAL_HEADERS ${HAL_PREFIX}hal_${cmp}.h)
+            list(APPEND HAL_SRCS ${HAL_PREFIX}hal_${cmp}.c)
         endif()
-    list(FIND HAL_EX_COMPONENTS ${cmp} STM32HAL_FOUND_INDEX)
-    if(NOT (${STM32HAL_FOUND_INDEX} LESS 0))
-        list(APPEND HAL_HEADERS ${HAL_PREFIX}hal_${cmp}_ex.h)
-        list(APPEND HAL_SRCS ${HAL_PREFIX}hal_${cmp}_ex.c)
+        list(FIND HAL_EX_COMPONENTS ${cmp} STM32HAL_FOUND_INDEX)
+        if(NOT (${STM32HAL_FOUND_INDEX} LESS 0))
+            list(APPEND HAL_HEADERS ${HAL_PREFIX}hal_${cmp}_ex.h)
+            list(APPEND HAL_SRCS ${HAL_PREFIX}hal_${cmp}_ex.c)
+        endif()
+    else()
+        list(APPEND HAL_HEADERS ${HAL_PREFIX}${cmp}.h)
+        list(APPEND HAL_SRCS ${HAL_PREFIX}${cmp}.c)
     endif()
+
 endforeach()
 
 list(REMOVE_DUPLICATES HAL_HEADERS)
 list(REMOVE_DUPLICATES HAL_SRCS)
 
 find_path(STM32HAL_INCLUDE_DIR ${HAL_HEADERS}
-    HINTS ${STM32Cube_DIR}/Drivers/stm32${STM32_FAMILY}xx_hal_Driver/Inc
+    HINTS ${STM32Cube_DIR}/Drivers/STM32${STM32_FAMILY}xx_hal_Driver/Inc
     CMAKE_FIND_ROOT_PATH_BOTH
 )
 
