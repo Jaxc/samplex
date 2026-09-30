@@ -21,6 +21,16 @@ DRIVERS_DIR="${LIB_DIR}/Drivers"
 HAL_DEST="${DRIVERS_DIR}/STM32F4xx_HAL_Driver"
 CMSIS_DEVICE_DEST="${DRIVERS_DIR}/CMSIS/Device/ST/STM32F4xx"
 CMSIS_INCLUDE_DEST="${DRIVERS_DIR}/CMSIS/Include"
+TOOLS_DIR="${BOARD_DIR}/tools"
+
+# The SVD is only read by the optional Segger Ozone configuration, and it is
+# ST's file rather than ours, so it is fetched like the rest of ST's content
+# instead of being carried in the tree. The pack version is pinned and its
+# digest checked, the same way the toolchains are.
+SVD_PACK_VERSION="3.1.1"
+SVD_PACK_URL="https://www.keil.com/pack/Keil.STM32F4xx_DFP.${SVD_PACK_VERSION}.pack"
+SVD_PACK_SHA256="345231106fe697df24bbe9133aeeec1b0383d7891c4adf4f47bbb8b478e9f2f0"
+SVD_MEMBER="CMSIS/SVD/STM32F429.svd"
 
 echo "=========================================="
 echo "STM32CubeF4 Standalone Driver Fetcher (Linux)"
@@ -75,6 +85,18 @@ git clone --depth 1 https://github.com/STMicroelectronics/cmsis-core.git "${TEMP
 cp -r "${TEMP_DIR}/CMSIS/Core/Include/"* "${CMSIS_INCLUDE_DEST}/"
 clean_temp
 echo "[OK] Up-to-date CMSIS Core Include headers copied"
+echo ""
+
+# 4. Fetch the STM32F429 SVD from the CMSIS device pack
+echo "[INFO] Fetching STM32F429 SVD from CMSIS pack ${SVD_PACK_VERSION}..."
+mkdir -p "${TOOLS_DIR}"
+mkdir -p "${TEMP_DIR}"
+curl -fsSL -o "${TEMP_DIR}/dfp.pack" "${SVD_PACK_URL}"
+echo "${SVD_PACK_SHA256}  ${TEMP_DIR}/dfp.pack" | sha256sum -c - >/dev/null
+unzip -o -q "${TEMP_DIR}/dfp.pack" "${SVD_MEMBER}" -d "${TEMP_DIR}"
+cp "${TEMP_DIR}/${SVD_MEMBER}" "${TOOLS_DIR}/STM32F429.svd"
+clean_temp
+echo "[OK] STM32F429.svd placed in tools/"
 echo ""
 
 echo "=========================================="

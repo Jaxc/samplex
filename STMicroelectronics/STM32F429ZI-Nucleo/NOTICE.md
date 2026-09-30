@@ -95,3 +95,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+---
+
+## 4. STMicroelectronics STM32F429 System View Description
+
+Fetched by `scripts/fetch_sdk.sh` from the CMSIS device family pack and written to `tools/STM32F429.svd`. It is read only by the optional Segger Ozone debug configuration and is not part of any build.
+
+* **Source**: https://www.keil.com/pack/Keil.STM32F4xx_DFP.3.1.1.pack, member `CMSIS/SVD/STM32F429.svd`
+* **License**: Apache-2.0
+
+```text
+Copyright (c) 2024 STMicroelectronics.
+
+SPDX-License-Identifier: Apache-2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+```
