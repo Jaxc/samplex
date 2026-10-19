@@ -13,6 +13,7 @@ Use the `ACTIVE_DEMO` CMake variable to select which demo to compile:
 | Demo Name | Description | Targets |
 | :--- | :--- | :--- |
 | **`threadx_basic`** *(Default)* | Multi-threaded RTOS demo showcasing thread scheduling, mechanical button debouncing, message queue logging, and interrupt-driven UART ring buffers. | ThreadX |
+| **`usbx_msc`** | Multi-threaded RTOS demo showcasing USBX MSC device. | ThreadX |
 
 
 ## Hardware Configuration

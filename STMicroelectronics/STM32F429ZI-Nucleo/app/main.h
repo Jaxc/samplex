@@ -31,8 +31,6 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "usb.h"
-#include "ethernet_phy.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

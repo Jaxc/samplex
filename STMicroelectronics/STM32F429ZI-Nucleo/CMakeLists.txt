@@ -34,14 +34,18 @@ set(STM32Cube_DIR "${CMAKE_CURRENT_LIST_DIR}/lib/stm32cubef4")
 
 # Find CMSIS and HAL driver packages
 find_package(CMSIS REQUIRED)
-find_package(STM32HAL REQUIRED COMPONENTS cortex pwr rcc gpio uart dma)
-find_package(ST_USBX_MIDDLEWARE REQUIRED)
-find_package(ST_FILEX_MIDDLEWARE REQUIRED)
+find_package(STM32HAL REQUIRED COMPONENTS cortex pwr rcc gpio uart dma eth hcd pcd tim ll_usb)
+
+if ("${ACTIVE_DEMO}" STREQUAL "usbx_msc")
+    message("test")
+    find_package(ST_USBX_MIDDLEWARE REQUIRED)
+    find_package(ST_FILEX_MIDDLEWARE REQUIRED)
+endif()
 
 # Compile the STM32F4xx HAL Driver Library as an Object Library
 set(HAL_TARGET stm32cubef4)
 add_library(${HAL_TARGET} OBJECT ${STM32HAL_SOURCES})
-
+message("${STM32HAL_INCLUDE_DIR}")
 target_compile_definitions(${HAL_TARGET}
     PUBLIC
         STM32F429xx
@@ -77,7 +81,7 @@ endif()
 # Check if the active demo uses USBX by looking for ux_user.h
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/app/demos/${ACTIVE_DEMO}/ux_user.h")
     set(USE_USBX ON)
-    set(NX_USER_FILE "${CMAKE_CURRENT_LIST_DIR}/app/demos/${ACTIVE_DEMO}/ux_user.h" CACHE STRING "Enable USBX user configuration" FORCE)
+    set(UX_USER_FILE "${CMAKE_CURRENT_LIST_DIR}/app/demos/${ACTIVE_DEMO}/ux_user.h" CACHE STRING "Enable USBX user configuration" FORCE)
 else()
     set(USE_USBX OFF)
 endif()
@@ -85,17 +89,9 @@ endif()
 # Check if the active demo uses FileX by looking for fx_user.h
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/app/demos/${ACTIVE_DEMO}/fx_user.h")
     set(USE_FILEX ON)
-    set(NX_USER_FILE "${CMAKE_CURRENT_LIST_DIR}/app/demos/${ACTIVE_DEMO}/fx_user.h" CACHE STRING "Enable FileX user configuration" FORCE)
+    set(FX_USER_FILE "${CMAKE_CURRENT_LIST_DIR}/app/demos/${ACTIVE_DEMO}/fx_user.h" CACHE STRING "Enable FileX user configuration" FORCE)
 else()
     set(USE_FILEX OFF)
-endif()
-
-# Check if the active demo uses NetX Duo by looking for nx_user.h
-if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/app/demos/${ACTIVE_DEMO}/nx_user.h")
-    set(USE_NETXDUO ON)
-    set(NX_USER_FILE "${CMAKE_CURRENT_LIST_DIR}/app/demos/${ACTIVE_DEMO}/nx_user.h" CACHE STRING "Enable NetX Duo user configuration" FORCE)
-else()
-    set(USE_NETXDUO OFF)
 endif()
 
 # Compile ThreadX Kernel from root shared libs submodule
@@ -108,6 +104,8 @@ if(USE_USBX)
     add_subdirectory(${USBX_DIR} usbx)
     set(USBX_MIDDLEWARE_TARGET st-usbx-middlware)
     add_library(${USBX_MIDDLEWARE_TARGET} OBJECT ${ST_USBX_MIDDLEWARE_SOURCES})
+
+    target_include_directories(${USBX_MIDDLEWARE_TARGET} PUBLIC ${ST_USBX_MIDDLEWARE_INCLUDE_DIRS})
 
     target_link_libraries(${USBX_MIDDLEWARE_TARGET}
         PRIVATE
@@ -163,14 +161,36 @@ target_link_libraries(board_bsp PUBLIC
         threadx
 )
 
-# 2. Define conditional NetX Duo driver library target
-if(USE_NETXDUO)
+# 2. Define the Board USB static library
+add_library(board_usb OBJECT
+    app/USB/usb_phy.c
+    app/USB/usb.c
+    app/USB/ux_device_descriptors.c
+)
+
+# Compile definitions for BSP
+target_compile_definitions(board_usb PRIVATE
+    STM32F429xx
+    USE_HAL_DRIVER
+    STM32F4
+)
+
+# Link libraries for BSP (HAL and CMSIS)
+target_link_libraries(board_usb PUBLIC
+    stm32cubef4
+        threadx
+        usbx
+        st-usbx-middlware
+)
+
+# 3. Define conditional NetX Duo driver library target
+if(FALSE)
     add_library(netx_stm32_driver OBJECT
         lib/netxduo/nx_stm32_eth_driver.c
         lib/netxduo/nx_stm32_phy_driver.c
         lib/netxduo/lan8742.c
     )
-    
+
     # NetX driver needs its local files, HAL, CMSIS, ThreadX, NetX Duo and the active demo folder (for nx_stm32_eth_config.h and nx_user.h)
     target_include_directories(netx_stm32_driver PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/lib/netxduo
@@ -179,18 +199,18 @@ if(USE_NETXDUO)
         ${CMSIS_INCLUDE_DIRS}
         ${STM32HAL_INCLUDE_DIR}
     )
-    
+
     target_compile_definitions(netx_stm32_driver PRIVATE
         STM32F767xx
         USE_HAL_DRIVER
         STM32F7
     )
-    
+
     target_link_libraries(netx_stm32_driver PUBLIC
         netxduo
         stm32cubef7
     )
 endif()
 
-# 3. Add the active demo subdirectory to build the executable target
+# 4. Add the active demo subdirectory to build the executable target
 add_subdirectory(app/demos/${ACTIVE_DEMO})

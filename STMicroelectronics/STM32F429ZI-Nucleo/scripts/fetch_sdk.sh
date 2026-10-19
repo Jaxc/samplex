@@ -23,6 +23,7 @@ HAL_DEST="${DRIVERS_DIR}/STM32F4xx_HAL_Driver"
 CMSIS_DEVICE_DEST="${DRIVERS_DIR}/CMSIS/Device/ST/STM32F4xx"
 CMSIS_INCLUDE_DEST="${DRIVERS_DIR}/CMSIS/Include"
 TOOLS_DIR="${BOARD_DIR}/tools"
+ST_USBX_DEST="${DRIVERS_DIR}/Middleware"
 
 # The SVD is only read by the optional Segger Ozone configuration, and it is
 # ST's file rather than ours, so it is fetched like the rest of ST's content
