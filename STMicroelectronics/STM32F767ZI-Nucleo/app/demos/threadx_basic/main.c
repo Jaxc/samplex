@@ -149,6 +149,7 @@ void tx_application_define(void *first_unused_memory)
     /* Check for error.  */
     if (status != TX_SUCCESS) {
         Error_Handler();
+    }
 }
 
 /**

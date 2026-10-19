@@ -13,15 +13,15 @@
 
  /* This file contains all USB related SW, to separate different SW and make
   * the sample SW easier to follow. */
-#include "usb.h"
+
+#include "ansi_colors.h"
 #include "board_init.h"
 #include "tx_api.h"
+#include "usb.h"
 #include "usb_phy.h"
 #include "ux_api.h"
 #include "ux_device_class_storage.h"
 #include "ux_device_descriptors.h"
-
-
 
 static ULONG storage_interface_number;
 static ULONG storage_configuration_number;
@@ -69,17 +69,23 @@ UINT media_status(
 
 UINT media_flush (VOID *storage, ULONG lun, ULONG number_blocks, ULONG lba, ULONG *media_status);
 
-void  tx_demo_thread_device_simulation_entry(ULONG arg);
 
 void start_usbx(void) {
     /* Initialize USB */
     UINT status;
+
+    tx_mutex_get(&printf_mutex, TX_WAIT_FOREVER);
+    printf("\x1b[38;5;243m[LOG]" ANSI_RESET " " MSG_INFO "Starting USBX initialization!\r\n" ANSI_RESET);
+    tx_mutex_put(&printf_mutex);
 
     /* This call should be as early as possible in tx_application_define(). As a
     * compromise it is placed first in this function. */
     status = ux_system_initialize(usb_buffer, USB_MEMORY_SIZE, UX_NULL, 0);
     /* Check for error.  */
     if (status != UX_SUCCESS) {
+        tx_mutex_get(&printf_mutex, TX_WAIT_FOREVER);
+        printf("\x1b[38;5;243m[LOG]" ANSI_RESET " "MSG_ERROR "ux_system_initialize() failed with returncode 0x%08x!\r\n" ANSI_RESET, status);
+        tx_mutex_put(&printf_mutex);
         Error_Handler();
     }
 
@@ -116,6 +122,9 @@ void start_usbx(void) {
                     UX_NULL);
     /* Check for error.  */
     if (status != UX_SUCCESS) {
+        tx_mutex_get(&printf_mutex, TX_WAIT_FOREVER);
+        printf("\x1b[38;5;243m[LOG]" ANSI_RESET " "MSG_ERROR "ux_device_stack_initialize() failed with returncode 0x%08x!\r\n" ANSI_RESET, status);
+        tx_mutex_put(&printf_mutex);
         Error_Handler();
     }
 
@@ -149,121 +158,18 @@ void start_usbx(void) {
         storage_configuration_number, storage_interface_number, (VOID *)&storage_parameter);
     /* Check for error.  */
     if (status != UX_SUCCESS) {
+        tx_mutex_get(&printf_mutex, TX_WAIT_FOREVER);
+        printf("\x1b[38;5;243m[LOG]" ANSI_RESET " "MSG_ERROR "ux_device_stack_class_register() failed with returncode 0x%08x!\r\n" ANSI_RESET, status);
+        tx_mutex_put(&printf_mutex);
         Error_Handler();
     }
 
 
     usb_phy_setup_device();
 
-    /* Thread 5: USB device thread */
-    status = tx_thread_create(
-                    &usb_device_thread,
-                    "USB thread",
-                    tx_demo_thread_device_simulation_entry,
-                    0,
-                    usb_device_thread_stack,
-                    USB_DEVICE_THREAD_STACK_SIZE,
-                    20,
-                    20,
-                    TX_NO_TIME_SLICE,
-                    TX_AUTO_START);
-
-    /* Check for error.  */
-    if (status != TX_SUCCESS) {
-        Error_Handler();
-    }
-}
-
-void  tx_demo_thread_device_simulation_entry(ULONG arg)
-{
-
-    UX_PARAMETER_NOT_USED(arg);
-#if 0
-UINT    status;
-ULONG   actual_length;
-
-
-    UX_PARAMETER_NOT_USED(arg);
-
-    while(1)
-    {
-
-        /* Ensure the dpump class on the device is still alive.  */
-        while (dpump_device != UX_NULL)
-        {
-
-            /* Increment thread counter.  */
-            thread_1_counter++;
-
-            /* Read from the device data pump.  */
-            status =  _ux_device_class_dpump_read(dpump_device, device_buffer, UX_HOST_CLASS_DPUMP_PACKET_SIZE, &actual_length);
-
-            /* Verify that the status and the amount of data is correct.  */
-            if ((status != UX_SUCCESS) || actual_length != UX_HOST_CLASS_DPUMP_PACKET_SIZE)
-                error_handler();
-
-            /* Now write to the device data pump.  */
-            status =  _ux_device_class_dpump_write(dpump_device, device_buffer, UX_HOST_CLASS_DPUMP_PACKET_SIZE, &actual_length);
-
-            /* Verify that the status and the amount of data is correct.  */
-            if ((status != UX_SUCCESS) || actual_length != UX_HOST_CLASS_DPUMP_PACKET_SIZE)
-                error_handler();
-        }
-
-        /* Relinquish to other thread.  */
-        tx_thread_relinquish();
-    }
-#endif
-}
-
-void  usb_device_thread_entry(ULONG arg)
-{
-
-//UINT    status;
-//ULONG   actual_length;
-
-
-    UX_PARAMETER_NOT_USED(arg);
-    //UINT status;
-    while(1)
-    {
-#if 0
-        status = ux_system_tasks_run();
-
-        /* Check for error.  */
-        if (status != TX_SUCCESS) {
-            Error_Handler();
-        }
-
-
-        /* Ensure the dpump class on the device is still alive.  */
-        while (dpump_device != UX_NULL)
-        {
-
-            /* Increment thread counter.  */
-            thread_1_counter++;
-
-            /* Read from the device data pump.  */
-            status =  _ux_device_class_dpump_read(dpump_device, device_buffer, UX_HOST_CLASS_DPUMP_PACKET_SIZE, &actual_length);
-
-            /* Verify that the status and the amount of data is correct.  */
-            if ((status != UX_SUCCESS) || actual_length != UX_HOST_CLASS_DPUMP_PACKET_SIZE)
-                error_handler();
-
-            /* Now write to the device data pump.  */
-            status =  _ux_device_class_dpump_write(dpump_device, device_buffer, UX_HOST_CLASS_DPUMP_PACKET_SIZE, &actual_length);
-
-            /* Verify that the status and the amount of data is correct.  */
-            if ((status != UX_SUCCESS) || actual_length != UX_HOST_CLASS_DPUMP_PACKET_SIZE)
-                error_handler();
-        }
-
-        /* Relinquish to other thread.  */
-        tx_thread_relinquish();
-#endif
-    tx_thread_relinquish();
-    }
-
+    tx_mutex_get(&printf_mutex, TX_WAIT_FOREVER);
+    printf("\x1b[38;5;243m[LOG]" ANSI_RESET " " MSG_SUCCESS "USBX initialized successfully!\r\n" ANSI_RESET);
+    tx_mutex_put(&printf_mutex);
 }
 
 UINT media_read(

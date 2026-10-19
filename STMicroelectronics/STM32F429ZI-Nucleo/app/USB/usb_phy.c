@@ -11,6 +11,7 @@
  *     Jacob Rosén - Initial version.
  */
 
+#include "ansi_colors.h"
 #include "main.h"
 #include "usb_phy.h"
 #include "ux_api.h"
@@ -85,7 +86,7 @@ static void MX_USB_OTG_FS_PCD_Init(void)
 
 void usb_phy_setup_device(void) {
     /* Set up endpoints */
-    //usbd_setup_endpoints();
+    UINT status;
 
 
     HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_FS, 0x100);
@@ -93,56 +94,17 @@ void usb_phy_setup_device(void) {
     HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 1, 0x100);
     HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 2, 0x100);
 
-    ux_dcd_stm32_initialize((ULONG)USB_OTG_FS, (ULONG)&hpcd_USB_OTG_FS);
+    status = ux_dcd_stm32_initialize((ULONG)USB_OTG_FS, (ULONG)&hpcd_USB_OTG_FS);
 
-
-    //USB_OTG_FS->GINTMSK = 0xFFffFFff;
-    //USB_MASK_INTERRUPT(USB_OTG_FS,0xFFffFFff);
+    if (status != UX_SUCCESS) {
+        tx_mutex_get(&printf_mutex, TX_WAIT_FOREVER);
+        printf("\x1b[38;5;243m[LOG]" ANSI_RESET " "MSG_ERROR "ux_dcd_stm32_initialize() failed with returncode 0x%08x!\r\n" ANSI_RESET, status);
+        tx_mutex_put(&printf_mutex);
+    }
 
     /* Start USB */
     HAL_PCD_Start(&hpcd_USB_OTG_FS);
 }
-
-#if 0
-static void usbd_setup_endpoints(void)
-{
-    if (HAL_PCD_EP_Open(&hpcd_USB_OTG_FS, 0x81, 0x40, EP_TYPE_BULK) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    if (HAL_PCD_EP_Open(&hpcd_USB_OTG_FS, 0x01, 0x40, EP_TYPE_BULK) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-}
-
-void usbd_setup(usbd_context_t *ctx, usb_setup_packet_t *setup)
-{
-
-    ctx->ep0_state = USBD_EP0_SETUP;
-
-    setup->wValue = SWAPBYTE(&(setup->wValue));
-    setup->wIndex = SWAPBYTE(&(setup->wIndex));
-    setup->wLength = SWAPBYTE(&(setup->wLength));
-
-    switch (setup->bmRequestType.recipient)
-    {
-    case USB_REQ_RECIPIENT_DEVICE:
-        usbd_std_dev_request(ctx, setup);
-        break;
-    case USB_REQ_RECIPIENT_INTERFACE:
-        usbd_std_if_request(ctx, setup);
-        break;
-    case USB_REQ_RECIPIENT_ENDPOINT:
-        usbd_std_ep_request(ctx, setup);
-        break;
-    default:
-        usbd_ep_stall(ctx, setup->bmRequestType.direction ? 0x80 : 0x00);
-        break;
-    }
-}
-#endif
 
 void OTG_FS_IRQHandler(void)
 {

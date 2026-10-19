@@ -13,8 +13,9 @@
  *     Jacob Rosén - STM32F429ZI adaptation
  */
 
-#include "board_init.h"
 #include <string.h>
+#include "board_init.h"
+
 
 /* Global UART handler */
 UART_HandleTypeDef huart3;
